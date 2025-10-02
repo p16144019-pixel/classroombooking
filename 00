@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>教室借用預約系統</title>
+  <meta name="description" content="每週一至五 09:00–22:00，三間教室一小時單位預約（含取消機制）。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
+          colors: { brand: { 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' } }
+        }
+      }
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    .card { box-shadow: 0 10px 20px rgba(0,0,0,0.06), 0 6px 6px rgba(0,0,0,0.05); }
+    .slot { cursor: pointer; }
+  </style>
+</head>
+<body class="bg-white text-slate-800 antialiased">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90 border-b border-slate-200">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-16 items-center justify-between">
+        <a href="#home" class="flex items-center gap-2 font-extrabold tracking-tight text-slate-900 text-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-brand-600"><path d="M11.7 2.3a1 1 0 0 1 1.6 0l8 10.5a1 1 0 0 1-.8 1.6H3.5a1 1 0 0 1-.8-1.6l9-10.5z"/><path d="M4 21a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1z"/></svg>
+          <span>教室借用預約</span>
+        </a>
+        <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
+          <a href="#booking" class="hover:text-brand-600">預約</a>
+          <a href="#rules" class="hover:text-brand-600">規則</a>
+          <a href="#faq" class="hover:text-brand-600">FAQ</a>
+        </nav>
+        <button id="menuBtn" class="md:hidden inline-flex items-center justify-center rounded-xl p-2 hover:bg-slate-100" aria-label="Open Menu">
+          <svg id="menuIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobileMenu" class="md:hidden hidden border-t border-slate-200 bg-white">
+      <div class="mx-auto max-w-7xl px-4 py-3 flex flex-col gap-3 text-sm">
+        <a href="#booking" class="hover:text-brand-600">預約</a>
+        <a href="#rules" class="hover:text-brand-600">規則</a>
+        <a href="#faq" class="hover:text-brand-600">FAQ</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section id="home" class="relative overflow-hidden">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="py-14 grid lg:grid-cols-2 items-center gap-10">
+        <div>
+          <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900">小水槽／B1-12（工具間）／406-2（流力實驗室）</h1>
+          <p class="mt-5 text-lg text-slate-600">週一至週五 09:00–22:00，整點為單位；同時段僅限一人。點選可預約格子填資料即可，已預約格子可用學號＋電話取消。</p>
+          <div class="mt-8 flex gap-3">
+            <a href="#booking" class="inline-flex items-center rounded-2xl bg-brand-600 px-5 py-3 text-white font-semibold hover:bg-brand-700 transition">開始預約</a>
+            <a href="#rules" class="inline-flex items-center rounded-2xl border border-slate-300 px-5 py-3 font-semibold hover:bg-slate-50 transition">查看規則</a>
+          </div>
+        </div>
+        <div class="relative">
+          <div class="aspect-[16/10] rounded-3xl ring-1 ring-slate-200 overflow-hidden card bg-white p-6">
+            <div class="h-full w-full rounded-xl border border-slate-200 bg-slate-50 p-4 grid place-items-center text-slate-500">
+              預約行事曆介面預覽
+            </div>
+          </div>
+          <p class="mt-3 text-center text-sm text-slate-500">顯示 09:00–22:00（最後 21:00–22:00）。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Booking -->
+  <section id="booking" class="py-16 bg-slate-50">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mb-6">
+        <h2 class="text-3xl font-extrabold tracking-tight">預約教室</h2>
+        <p class="mt-2 text-slate-600">請先選日期（僅限平日），再選教室與時段。</p>
+      </div>
+
+      <div class="card rounded-3xl bg-white p-6">
+        <div class="grid md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700">日期（週一至週五）</label>
+            <input id="dateInput" type="date" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <p id="dateHint" class="mt-1 text-xs text-slate-500">僅允許選取平日</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700">教室</label>
+            <select id="roomSelect" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
+              <option value="R1">小水槽</option>
+              <option value="R2">B1-12（工具間）</option>
+              <option value="R3">406-2（流力實驗室）</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button id="loadBtn" class="w-full inline-flex items-center justify-center rounded-2xl bg-brand-600 px-4 py-2 text-white font-semibold hover:bg-brand-700 transition">載入時段</button>
+          </div>
+        </div>
+
+        <!-- Slots Grid -->
+        <div id="slotsWrap" class="mt-6 hidden">
+          <div class="flex items-center justify-between mb-3">
+            <h3 id="slotsTitle" class="text-xl font-bold">可預約時段</h3>
+            <button id="refreshBtn" class="text-sm px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-50">重新整理</button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3" id="slotsGrid"></div>
+          <p class="mt-3 text-sm text-slate-500">灰色＝已預約或不開放；彩色＝可預約。點「已預約」可取消（需學號＋電話）。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rules -->
+  <section id="rules" class="py-16">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+      <h2 class="text-3xl font-extrabold tracking-tight">借用規則</h2>
+      <ul class="mt-4 space-y-3 text-slate-700">
+        <li>• 借用時段：週一至週五，09:00–22:00（最後時段 21:00–22:00）。</li>
+        <li>• 單位：每整點為一小時。</li>
+        <li>• 限制：同一教室、同一時段僅限一人借用。</li>
+        <li>• 預約需填：姓名、學號（SID）、電話。</li>
+        <li>• 取消：需使用預約時的學號與電話進行驗證。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="py-16 bg-slate-50">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+      <h2 class="text-3xl font-extrabold tracking-tight">常見問題</h2>
+      <div class="mt-6 space-y-4 text-slate-700">
+        <details class="rounded-2xl border border-slate-200 p-4" open>
+          <summary class="font-semibold">如何連接 Google 試算表後端？</summary>
+          <div class="mt-2 text-sm space-y-2">
+            <p>建立試算表（分頁名 <code>Bookings</code>，表頭 <code>Date|Room|Hour|Name|SID|Phone|CreatedAt</code>），部署 Apps Script 為 Web App，並把下列 <code>GAS_BASE</code> 改成你的 <code>/exec</code> 網址。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Booking Modal -->
+  <div id="modal" class="fixed inset-0 hidden items-center justify-center bg-black/30 p-4">
+    <div class="w-full max-w-xl card rounded-3xl bg-white p-6">
+      <div class="flex items-start justify-between">
+        <h3 class="text-xl font-bold">填寫預約資料</h3>
+        <button id="closeModal" class="p-2 rounded-xl hover:bg-slate-100" aria-label="關閉">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <p id="modalInfo" class="mt-1 text-sm text-slate-600"></p>
+
+      <form id="bookingForm" class="mt-4 space-y-4">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700">姓名</label>
+            <input required name="name" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700">學號</label>
+            <input required name="sid" pattern="[A-Za-z0-9-]+" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700">電話</label>
+          <input required name="phone" pattern="[0-9\\-+() ]{6,}" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+        <input type="hidden" name="date" />
+        <input type="hidden" name="room" />
+        <input type="hidden" name="hour" />
+        <div class="pt-2 flex items-center justify-end gap-3">
+          <button type="button" id="cancelBtn" class="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50">取消</button>
+          <button class="px-5 py-2 rounded-2xl bg-brand-600 text-white font-semibold hover:bg-brand-700">送出預約</button>
+        </div>
+      </form>
+      <p id="formMsg" class="mt-2 text-sm"></p>
+    </div>
+  </div>
+
+  <!-- Cancel Modal -->
+  <div id="cancelModal" class="fixed inset-0 hidden items-center justify-center bg-black/30 p-4">
+    <div class="w-full max-w-xl card rounded-3xl bg-white p-6">
+      <div class="flex items-start justify-between">
+        <h3 class="text-xl font-bold">取消預約</h3>
+        <button id="closeCancelModal" class="p-2 rounded-xl hover:bg-slate-100" aria-label="關閉">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <p id="cancelInfo" class="mt-1 text-sm text-slate-600"></p>
+
+      <form id="cancelForm" class="mt-4 space-y-4">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700">學號（驗證用）</label>
+            <input required name="sid" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700">電話（驗證用）</label>
+            <input required name="phone" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+        </div>
+        <input type="hidden" name="date" />
+        <input type="hidden" name="room" />
+        <input type="hidden" name="hour" />
+        <div class="pt-2 flex items-center justify-end gap-3">
+          <button type="button" id="cancelCloseBtn" class="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50">返回</button>
+          <button class="px-5 py-2 rounded-2xl bg-red-600 text-white font-semibold hover:bg-red-700">確認取消</button>
+        </div>
+      </form>
+      <p id="cancelMsg" class="mt-2 text-sm"></p>
+    </div>
+  </div>
+
+  <footer class="py-10 border-t border-slate-200">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-sm text-slate-500">© <span id="year"></span> 教室借用預約</p>
+      <div class="flex items-center gap-5 text-sm">
+        <a href="#rules" class="hover:text-brand-600">規則</a>
+        <a href="#faq" class="hover:text-brand-600">常見問題</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ===== Config =====
+    // 把下面的 URL 改成你的 Apps Script 部署網址（以 /exec 結尾）
+    const GAS_BASE = 'https://script.google.com/macros/s/AKfycbwhHjDDr5XAi0sIyLG6RpC--g2BerZ-cVF7FggehBZbm5YKjIibNtRiPMKh3GLuMshLxA/exec';
+
+    // ===== Utilities =====
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const pad2 = (n) => String(n).padStart(2, '0');
+
+    // Allowed hours 09:00–22:00 -> slot starts 09..21
+    const HOURS = Array.from({ length: 13 }, (_, i) => 9 + i); // 9..21
+
+    function isWeekday(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      const day = d.getDay(); // 0 Sun .. 6 Sat
+      return day >= 1 && day <= 5;
+    }
+
+    function todayISO() {
+      const t = new Date();
+      const y = t.getFullYear();
+      const m = pad2(t.getMonth() + 1);
+      const d = pad2(t.getDate());
+      return `${y}-${m}-${d}`;
+    }
+
+    function bookingKey(date, room, hour) { return `${date}__${room}__${hour}`; }
+
+    // ===== Backend hooks (GAS or local fallback) =====
+    function loadFromLS() {
+      try { return JSON.parse(localStorage.getItem('room_bookings_v1') || '{}'); } catch { return {}; }
+    }
+    function saveToLS(data) { localStorage.setItem('room_bookings_v1', JSON.stringify(data)); }
+
+    async function fetchBookings(date, room) {
+      if (!GAS_BASE || GAS_BASE === 'REPLACE_ME_WITH_YOUR_EXEC_URL') {
+        return loadFromLS();
+      }
+      const url = `${GAS_BASE}?action=list&date=${encodeURIComponent(date)}&room=${encodeURIComponent(room)}`;
+      const res = await fetch(url, { method: 'GET' });
+      if (!res.ok) throw new Error('讀取預約失敗');
+      const data = await res.json();
+      return data.map || {};
+    }
+
+    async function postBooking(booking) {
+      if (!GAS_BASE || GAS_BASE === 'REPLACE_ME_WITH_YOUR_EXEC_URL') {
+        const store = loadFromLS();
+        const key = bookingKey(booking.date, booking.room, booking.hour);
+        if (store[key]) { throw new Error('該時段已被預約'); }
+        store[key] = booking;
+        saveToLS(store);
+        return { ok: true };
+      }
+      const res = await fetch(GAS_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'book', ...booking })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.message || '預約失敗');
+      return data;
+    }
+
+    async function postCancel(payload) {
+      // payload: {date, room, hour, sid, phone}
+      if (!GAS_BASE || GAS_BASE === 'REPLACE_ME_WITH_YOUR_EXEC_URL') {
+        const store = loadFromLS();
+        const key = bookingKey(payload.date, payload.room, payload.hour);
+        const b = store[key];
+        if (!b) throw new Error('查無該時段預約');
+        if (String(b.sid) !== String(payload.sid) || String(b.phone) !== String(payload.phone)) {
+          throw new Error('學號或電話不符，無法取消');
+        }
+        delete store[key];
+        saveToLS(store);
+        return { ok: true };
+      }
+      const res = await fetch(GAS_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel', ...payload })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.message || '取消失敗');
+      return data;
+    }
+
+    // ===== UI behavior =====
+    const dateInput = $('#dateInput');
+    const roomSelect = $('#roomSelect');
+    const loadBtn = $('#loadBtn');
+    const slotsWrap = $('#slotsWrap');
+    const slotsGrid = $('#slotsGrid');
+    const slotsTitle = $('#slotsTitle');
+    const refreshBtn = $('#refreshBtn');
+
+    const modal = $('#modal');
+    const bookingForm = $('#bookingForm');
+    const modalInfo = $('#modalInfo');
+    const closeModal = $('#closeModal');
+    const cancelBtn = $('#cancelBtn');
+    const formMsg = $('#formMsg');
+
+    const cancelModal = $('#cancelModal');
+    const cancelForm = $('#cancelForm');
+    const cancelInfo = $('#cancelInfo');
+    const closeCancelModalBtn = $('#closeCancelModal');
+    const cancelCloseBtn = $('#cancelCloseBtn');
+    const cancelMsg = $('#cancelMsg');
+
+    // set min date today
+    dateInput.value = todayISO();
+    dateInput.min = todayISO();
+
+    function ensureWeekdayValue() {
+      if (!dateInput.value) return;
+      $('#dateHint').textContent = isWeekday(dateInput.value) ? '僅允許選取平日' : '所選日期為假日，請改選週一至週五';
+    }
+    ensureWeekdayValue();
+    dateInput.addEventListener('change', ensureWeekdayValue);
+
+    loadBtn.addEventListener('click', async () => {
+      const date = dateInput.value;
+      if (!date) { alert('請先選擇日期'); return; }
+      if (!isWeekday(date)) { alert('僅能預約週一至週五'); return; }
+      const room = roomSelect.value;
+      await renderSlots(date, room);
+    });
+
+    refreshBtn.addEventListener('click', async () => {
+      if (slotsWrap.classList.contains('hidden')) return;
+      await renderSlots(dateInput.value, roomSelect.value);
+    });
+
+    function roomLabel(v) {
+      if (v === 'R1') return '小水槽';
+      if (v === 'R2') return 'B1-12（工具間）';
+      return '406-2（流力實驗室）';
+    }
+
+    async function renderSlots(date, room) {
+      const store = await fetchBookings(date, room);
+      slotsGrid.innerHTML = '';
+      slotsTitle.textContent = `${date}｜${roomLabel(room)} 可預約時段`;
+      for (let h = 9; h <= 21; h++) {
+        const key = bookingKey(date, room, h);
+        const booked = !!store[key];
+        const label = `${pad2(h)}:00–${pad2(h+1)}:00`;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `slot rounded-2xl px-3 py-3 text-sm font-medium border ${booked ? 'bg-slate-100 border-slate-200 text-slate-600' : 'bg-white border-slate-300 hover:bg-brand-50 hover:border-brand-500 text-slate-800'}`;
+        btn.textContent = label + (booked ? '（已預約）' : '');
+        if (booked) {
+          btn.addEventListener('click', () => openCancelModal({ date, room, hour: h, booking: store[key] }));
+        } else {
+          btn.addEventListener('click', () => openModal({ date, room, hour: h }));
+        }
+        slotsGrid.appendChild(btn);
+      }
+      slotsWrap.classList.remove('hidden');
+    }
+
+    function openModal({ date, room, hour }) {
+      bookingForm.reset();
+      bookingForm.elements['date'].value = date;
+      bookingForm.elements['room'].value = room;
+      bookingForm.elements['hour'].value = hour;
+      modalInfo.textContent = `${date}｜${roomLabel(room)}｜${pad2(hour)}:00–${pad2(hour+1)}:00`;
+      formMsg.textContent = '';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeModalFn() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    closeModal.addEventListener('click', closeModalFn);
+    cancelBtn.addEventListener('click', closeModalFn);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModalFn(); });
+
+    bookingForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formMsg.textContent = '';
+      const fd = new FormData(bookingForm);
+      const booking = {
+        date: fd.get('date'),
+        room: fd.get('room'),
+        hour: Number(fd.get('hour')),
+        name: String(fd.get('name')).trim(),
+        sid: String(fd.get('sid')).trim(),
+        phone: String(fd.get('phone')).trim(),
+        createdAt: new Date().toISOString()
+      };
+      if (!booking.name || !booking.sid || !booking.phone) {
+        formMsg.textContent = '請完整填寫資料';
+        formMsg.className = 'mt-2 text-sm text-red-600';
+        return;
+      }
+      try {
+        const store = await fetchBookings(booking.date, booking.room);
+        if (store[bookingKey(booking.date, booking.room, booking.hour)]) {
+          formMsg.textContent = '該時段剛被他人預約，請重新選擇';
+          formMsg.className = 'mt-2 text-sm text-red-600';
+          await renderSlots(booking.date, booking.room);
+          return;
+        }
+        await postBooking(booking);
+        formMsg.textContent = '預約成功！';
+        formMsg.className = 'mt-2 text-sm text-green-600';
+        setTimeout(() => { closeModalFn(); renderSlots(booking.date, booking.room); }, 600);
+      } catch (err) {
+        formMsg.textContent = err?.message || '預約失敗，請稍後再試';
+        formMsg.className = 'mt-2 text-sm text-red-600';
+      }
+    });
+
+    function openCancelModal({ date, room, hour, booking }) {
+      cancelForm.reset();
+      cancelForm.elements['date'].value = date;
+      cancelForm.elements['room'].value = room;
+      cancelForm.elements['hour'].value = hour;
+      const who = booking ? (booking.name ? `${booking.name.slice(0,1)}＊` : '（已預約）') : '';
+      cancelInfo.textContent = `${date}｜${roomLabel(room)}｜${pad2(hour)}:00–${pad2(hour+1)}:00 已由 ${who} 預約；請輸入學號與電話以取消。`;
+      cancelMsg.textContent = '';
+      cancelModal.classList.remove('hidden');
+      cancelModal.classList.add('flex');
+    }
+    function closeCancelModal() { cancelModal.classList.add('hidden'); cancelModal.classList.remove('flex'); }
+    closeCancelModalBtn.addEventListener('click', closeCancelModal);
+    cancelCloseBtn.addEventListener('click', closeCancelModal);
+    cancelModal.addEventListener('click', (e) => { if (e.target === cancelModal) closeCancelModal(); });
+
+    cancelForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      cancelMsg.textContent = '';
+      const fd = new FormData(cancelForm);
+      const payload = {
+        date: fd.get('date'),
+        room: fd.get('room'),
+        hour: Number(fd.get('hour')),
+        sid: String(fd.get('sid')).trim(),
+        phone: String(fd.get('phone')).trim(),
+      };
+      if (!payload.sid || !payload.phone) {
+        cancelMsg.textContent = '請輸入學號與電話';
+        cancelMsg.className = 'mt-2 text-sm text-red-600';
+        return;
+      }
+      try {
+        await postCancel(payload);
+        cancelMsg.textContent = '已取消該時段預約';
+        cancelMsg.className = 'mt-2 text-sm text-green-600';
+        setTimeout(async () => { closeCancelModal(); await renderSlots(payload.date, payload.room); }, 600);
+      } catch (err) {
+        cancelMsg.textContent = err?.message || '取消失敗，請稍後再試';
+        cancelMsg.className = 'mt-2 text-sm text-red-600';
+      }
+    });
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('menuBtn')?.addEventListener('click', () => document.getElementById('mobileMenu').classList.toggle('hidden'));
+  </script>
+</body>
+</html>
